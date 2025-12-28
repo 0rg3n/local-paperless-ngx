@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROJECT_DIR="$HOME/docker/paperless-ngx"
+URL="http://localhost:8000"
+TIMEOUT=60
+INTERVAL=2
+APP_NAME="Paperless-ngx"
+
+notify() {
+    notify-send "$APP_NAME" "$1"
+}
+
+cd "$PROJECT_DIR"
+
+# Docker availability check
+if ! docker info >/dev/null 2>&1; then
+    notify "Docker daemon is not running"
+    echo "Docker daemon is not running" >&2
+    exit 1
+fi
+
+# Start containers if not running
+if ! docker compose ps --status running | grep -q paperless; then
+    docker compose up -d
+    notify "Starting Paperless…"
+fi
+
+echo "Waiting for Paperless-ngx to become available..."
+
+elapsed=0
+until curl -fsS "$URL" >/dev/null 2>&1; do
+    sleep "$INTERVAL"
+    elapsed=$((elapsed + INTERVAL))
+
+    if [ "$elapsed" -ge "$TIMEOUT" ]; then
+        notify "Paperless failed to start"
+        echo "ERROR: Paperless-ngx did not become ready in time" >&2
+        exit 1
+    fi
+done
+
+notify "Paperless is ready"
+echo "Paperless ready. Launching browser…"
+
+# Blocking browser launch
+chromium \
+  --app="$URL" \
+  --class=paperless-ngx \
+  --user-data-dir="$HOME/.config/paperless-browser"
+
+notify "Stopping Paperless…"
+docker compose down
+notify "Paperless stopped"
+

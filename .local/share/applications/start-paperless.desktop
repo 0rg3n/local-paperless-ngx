@@ -1,0 +1,15 @@
+[Desktop Entry]
+Categories=Office;
+Comment=Document management
+Exec=/home/user/.local/bin/start-paperless
+Icon=/home/user/.local/share/icons/paperless.svg
+Name=Paperless-ngx
+NoDisplay=false
+Path=
+PrefersNonDefaultGPU=false
+StartupNotify=true
+Terminal=false
+TerminalOptions=
+Type=Application
+X-KDE-SubstituteUID=false
+X-KDE-Username=
